@@ -10,22 +10,45 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
         body { font-family: 'Inter', sans-serif; }
+
+        /* Custom style for the confirmation box replacement */
+        .custom-modal {
+            z-index: 1000;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        .modal-content {
+            animation: fadeIn 0.3s;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        /* Style for details element icon rotation */
+        details[open] .details-icon {
+            transform: rotate(180deg);
+        }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen p-4">
 
+    <!-- Confirmation Modal (Replaces window.confirm) -->
+    <div id="confirm-modal" class="custom-modal fixed inset-0 hidden items-center justify-center">
+        <div class="modal-content bg-white p-6 rounded-xl shadow-2xl max-w-sm w-full">
+            <h3 class="text-lg font-bold text-red-700 mb-3">Confirm Reset</h3>
+            <p id="confirm-message" class="text-gray-700 mb-6">Are you sure you want to reset ALL sheetrock counts, the action history, and project details to zero? This action cannot be undone and only affects this browser.</p>
+            <div class="flex justify-end space-x-3">
+                <button id="confirm-cancel" class="px-4 py-2 bg-gray-200 text-gray-800 font-semibold rounded-lg hover:bg-gray-300 transition">Cancel</button>
+                <button id="confirm-ok" class="px-4 py-2 bg-red-500 text-white font-semibold rounded-lg hover:bg-red-600 transition">Reset</button>
+            </div>
+        </div>
+    </div>
+    
     <!-- Main Container -->
     <div class="max-w-xl mx-auto">
         <header class="text-center mb-6">
             <h1 class="text-3xl font-extrabold text-gray-800 mb-1">Sheetrock Tally</h1>
-            <p class="text-gray-500">Tap to count sheets. Saves automatically.</p>
+            <p class="text-gray-500">Standalone tool. Progress saves automatically to this browser.</p>
         </header>
-
-        <!-- User ID Display -->
-        <div id="auth-status" class="bg-indigo-50 border border-indigo-200 p-3 rounded-xl mb-6 shadow-sm text-sm">
-            <p class="font-semibold text-indigo-700">User ID:</p>
-            <p id="user-id" class="text-indigo-800 break-all font-mono text-xs mt-1">Authenticating...</p>
-        </div>
 
         <!-- Project Details Input Form -->
         <div class="bg-white p-5 rounded-xl shadow-lg mb-6 space-y-4">
@@ -34,23 +57,56 @@
             <div class="relative">
                 <label for="customer-name" class="block text-sm font-medium text-gray-700">Customer Name</label>
                 <input type="text" id="customer-name" data-field="customerName" placeholder="e.g., Jane Doe"
-                       class="project-input mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 disabled:bg-gray-100" disabled>
+                       class="project-input mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
             </div>
 
             <div class="relative">
                 <label for="site-address" class="block text-sm font-medium text-gray-700">Site Address</label>
                 <input type="text" id="site-address" data-field="siteAddress" placeholder="e.g., 123 Main St, Anytown"
-                       class="project-input mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 disabled:bg-gray-100" disabled>
+                       class="project-input mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
             </div>
         </div>
 
+        <!-- Sheetrock Type Configuration Panel (Expandable) -->
+        <details id="config-details" class="bg-white p-5 rounded-xl shadow-lg mb-6 cursor-pointer">
+            <summary class="text-xl font-bold text-gray-800 py-1 flex justify-between items-center list-none">
+                Sheetrock Type Configuration
+                <svg class="h-6 w-6 text-gray-400 transform transition-transform duration-300 details-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+            </summary>
+            
+            <div class="pt-4 border-t mt-4 border-gray-100 space-y-4">
+                <p class="text-sm text-gray-600">Customize the sheetrock types and their corresponding square footage (Sq. Ft.).</p>
+                
+                <!-- Existing Types List -->
+                <div id="config-list" class="space-y-3">
+                    <!-- Configurable items will be injected here -->
+                </div>
+
+                <h3 class="text-lg font-semibold text-gray-700 pt-3 border-t border-gray-100">Add New Type</h3>
+                
+                <!-- Add New Type Form -->
+                <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                    <input type="text" id="new-type-name" placeholder="Name (e.g., 5x10 Special)"
+                           class="w-full sm:w-1/2 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                    <input type="number" id="new-type-sqft" placeholder="Sq. Ft. (e.g., 50)" min="1"
+                           class="w-full sm:w-1/4 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-center">
+                    <button id="add-type-button" class="w-full sm:w-1/4 bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-2 rounded-md shadow-md transition duration-150">
+                        Add
+                    </button>
+                </div>
+            </div>
+        </details>
+
 
         <!-- Sheetrock Size Counters -->
-        <div id="sheetrock-counters" class="space-y-4 mb-8">
+        <!-- Refactored to use a grid for side-by-side display -->
+        <div id="sheetrock-counters" class="grid grid-cols-2 gap-4 mb-8">
             <!-- Counters will be injected here by JavaScript -->
         </div>
 
-        <!-- Total Summary and Reset Button -->
+        <!-- Total Summary -->
         <div class="mt-8 pt-4 border-t border-gray-200 flex flex-col space-y-4">
             <div class="flex justify-between items-center">
                 <h2 class="text-2xl font-bold text-gray-800">Total Sheets:</h2>
@@ -61,64 +117,258 @@
                 <h2 class="text-xl font-bold text-indigo-800">Total Square Footage:</h2>
                 <div class="text-2xl font-extrabold text-indigo-900" id="total-sqft">0 Sq. Ft.</div>
             </div>
+        </div>
 
-            <button id="reset-button" class="mt-4 w-full bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-4 rounded-xl shadow-md transition duration-150 ease-in-out disabled:opacity-50" disabled>
-                Reset ALL Counts & Project Data
-            </button>
+        <!-- Reset Button -->
+        <button id="reset-button" class="mt-6 w-full bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-4 rounded-xl shadow-md transition duration-150 ease-in-out">
+            Reset ALL Counts & Project Data
+        </button>
+
+        <!-- Action History Panel (Simple text log) -->
+        <div id="history-panel" class="bg-white p-5 rounded-xl shadow-lg mt-6 mb-8">
+            <h2 class="text-xl font-bold text-gray-800 pb-2 border-b border-gray-100">
+                Simple Action Log (Oldest First)
+            </h2>
+            
+            <div class="pt-4 space-y-1 max-h-48 overflow-y-auto" id="history-list">
+                <!-- Log entries or 'No actions recorded yet.' message will be injected here -->
+            </div>
         </div>
     </div>
 
-    <!-- Firebase Imports -->
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, onSnapshot, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        
+        // Key used for localStorage
+        const LOCAL_STORAGE_KEY = 'sheetrock_tally_data';
 
-        // Global Firebase variables
-        let app;
-        let db;
-        let auth;
-        let userId = null;
-        let isAuthReady = false;
-
-        // Constants for Firestore
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-        const COLLECTION_NAME = 'sheetrock_counts';
-        const DOCUMENT_ID = 'sheetrock_inventory';
-
-        // Sheetrock sizes and their corresponding square footage (in sq. ft.)
-        // Assumption: 5/8" Fire and 1/2" Regular are standard 4x8 (32 sqft)
-        const SHEETROCK_DIMENSIONS = {
+        // Base sheetrock dimensions for first-time initialization
+        const BASE_SHEETROCK_DIMENSIONS = {
             '4x8': 32,
             '4x10': 40,
             '4x12': 48,
-            '5/8" Fire': 32, // Assumed 4x8
-            '1/2" Regular': 32, // Assumed 4x8
-            'Moisture': 40, // User specified: 4x10
-            'Stretch': 54  // User specified: 4.5x12
+            '4x14': 56,
+            '4x16': 64,
+            '5/8 Fire': 32, 
+            '1/2 Regular': 32, 
+            'Moisture': 40, 
+            'Stretch': 54  
         };
-        const SHEETROCK_SIZES = Object.keys(SHEETROCK_DIMENSIONS);
-
+        
+        // Global state for the application data
+        let appData = {};
 
         // --- Utility Functions ---
 
         /**
-         * Safely gets the Firestore document path for the current user.
-         * @returns {object} The document reference.
+         * Generates a unique, URL-safe key from a sheetrock type name.
+         * Used for DOM IDs and is robust against special characters.
+         * @param {string} name - The display name of the sheetrock type.
+         * @returns {string} The sanitized key.
          */
-        function getDocumentRef() {
-            if (!db || !userId) {
-                console.error("Database or User ID is not initialized.");
-                return null;
+        function sanitizeKey(name) {
+            // Replaces all characters not a-z, 0-9, or hyphen with an underscore.
+            return name.toLowerCase().replace(/[^a-z0-9-]/g, '_').substring(0, 50);
+        }
+
+        // --- Custom Confirmation Modal ---
+
+        /**
+         * Replaces the browser's confirm dialog with a custom modal.
+         * @param {string} message - The message to display.
+         * @returns {Promise<boolean>} Resolves true if OK is clicked, false otherwise.
+         */
+        function customConfirm(message) {
+            return new Promise(resolve => {
+                const modal = document.getElementById('confirm-modal');
+                const msgElement = document.getElementById('confirm-message');
+                const okButton = document.getElementById('confirm-ok');
+                const cancelButton = document.getElementById('confirm-cancel');
+
+                msgElement.textContent = message;
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+
+                const cleanup = () => {
+                    modal.classList.add('hidden');
+                    modal.classList.remove('flex');
+                    okButton.removeEventListener('click', handleOk);
+                    cancelButton.removeEventListener('click', handleCancel);
+                };
+
+                const handleOk = () => {
+                    cleanup();
+                    resolve(true);
+                };
+
+                const handleCancel = () => {
+                    cleanup();
+                    resolve(false);
+                };
+
+                okButton.addEventListener('click', handleOk);
+                cancelButton.addEventListener('click', handleCancel);
+            });
+        }
+
+
+        // --- Local Storage Functions ---
+
+        /**
+         * Saves the current application state to Local Storage and triggers UI update.
+         */
+        function saveToLocalStorage() {
+            try {
+                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(appData));
+                updateUI(); 
+            } catch (error) {
+                console.error("Error saving to local storage:", error);
             }
-            // Use private storage path: /artifacts/{appId}/users/{userId}/sheetrock_counts/sheetrock_inventory
-            return doc(db, 'artifacts', appId, 'users', userId, COLLECTION_NAME, DOCUMENT_ID);
+        }
+
+        /**
+         * Loads the application state from Local Storage or initializes a new one.
+         */
+        function loadFromLocalStorage() {
+            const savedData = localStorage.getItem(LOCAL_STORAGE_KEY);
+            let loadedData;
+
+            if (savedData) {
+                try {
+                    loadedData = JSON.parse(savedData);
+                } catch (e) {
+                    console.error("Error parsing local storage data, creating new state.");
+                    loadedData = null;
+                }
+            }
+            
+            // Initialize app data structure
+            appData = {
+                internalId: (loadedData && loadedData.internalId) || crypto.randomUUID(), 
+                customerName: (loadedData && loadedData.customerName) || '',
+                siteAddress: (loadedData && loadedData.siteAddress) || '',
+                dimensions: (loadedData && loadedData.dimensions) || BASE_SHEETROCK_DIMENSIONS,
+                actionLog: (loadedData && loadedData.actionLog) || [], 
+                counts: {} 
+            };
+        }
+        
+        /**
+         * Recalculates all sheetrock counts by iterating through the action log.
+         */
+        function recalculateCounts() {
+            const newCounts = {};
+            const dimensionKeys = Object.keys(appData.dimensions);
+            
+            // 1. Initialize counts for all current dimensions to zero
+            dimensionKeys.forEach(key => {
+                newCounts[key] = 0;
+            });
+
+            // 2. Process the log to determine current totals
+            appData.actionLog.forEach(logEntry => {
+                const type = logEntry.type;
+                if (appData.dimensions[type] !== undefined) { 
+                    if (logEntry.action === 'increment') {
+                        newCounts[type]++;
+                    } else if (logEntry.action === 'decrement' && newCounts[type] > 0) {
+                        newCounts[type]--;
+                    }
+                }
+            });
+            
+            // 3. Update the global state's counts object
+            appData.counts = newCounts;
         }
 
         // --- UI Rendering ---
+        
+        /**
+         * Renders the configuration list panel.
+         */
+        function renderConfigPanel() {
+            const configList = document.getElementById('config-list');
+            configList.innerHTML = '';
+            
+            const dimensions = appData.dimensions;
+
+            for (const name in dimensions) {
+                const sqft = dimensions[name];
+                const key = name; 
+
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'flex items-center space-x-2 p-3 bg-gray-50 rounded-lg border';
+                itemDiv.innerHTML = `
+                    <!-- Name Input -->
+                    <input type="text" value="${key}" data-original-key="${key}" data-field="name"
+                           class="config-input w-2/5 px-2 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                           placeholder="Type Name">
+                    
+                    <!-- Sq. Ft. Input -->
+                    <input type="number" value="${sqft}" data-original-key="${key}" data-field="sqft" min="1"
+                           class="config-input w-1/4 px-2 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-center"
+                           placeholder="Sq. Ft.">
+
+                    <!-- Remove Button -->
+                    <button data-key="${key}" data-action="remove"
+                            class="remove-type-btn bg-red-100 hover:bg-red-200 text-red-600 font-semibold py-1 px-3 rounded-md transition duration-150 text-sm w-1/4">
+                        Remove
+                    </button>
+                `;
+                configList.appendChild(itemDiv);
+            }
+            
+            // Re-attach change listeners for the new inputs
+            document.querySelectorAll('.config-input').forEach(input => {
+                input.addEventListener('change', handleConfigChange);
+            });
+            document.querySelectorAll('.remove-type-btn').forEach(button => {
+                button.addEventListener('click', handleRemoveDimension);
+            });
+        }
+        
+        /**
+         * Renders the action log panel using simple text (Oldest First).
+         */
+        function renderLogPanel() {
+            const historyList = document.getElementById('history-list');
+            const currentLog = appData.actionLog;
+            
+            // 1. Clear the container completely
+            historyList.innerHTML = ''; 
+
+            if (currentLog.length === 0) {
+                // 2. If log is empty, re-insert the message
+                historyList.innerHTML = '<p class="text-gray-500 text-center">No actions recorded yet.</p>';
+                return;
+            }
+            
+            // 3. Populate with log entries
+            currentLog.forEach(entry => {
+                const date = new Date(entry.timestamp);
+                // Display seconds for quick confirmation of updates
+                const timeString = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                
+                // Determine the display name, handling removed types gracefully
+                const typeName = appData.dimensions[entry.type] ? entry.type : `<span class="italic text-gray-400">${entry.type} (Removed)</span>`;
+
+                const actionText = entry.action === 'increment' 
+                    ? `<span class="font-bold text-green-700">+1</span>` 
+                    : `<span class="font-bold text-red-700">-1</span>`;
+                
+                // Use simple <p> tags for list items
+                const logItem = document.createElement('p');
+                logItem.className = 'text-sm border-b border-gray-100 py-1 flex justify-between items-center';
+                logItem.innerHTML = `
+                    <span>${actionText} ${typeName}</span>
+                    <span class="text-gray-500 text-xs">${timeString}</span>
+                `;
+                historyList.appendChild(logItem);
+            });
+            
+            // Scroll to the bottom to show the newest log entry
+            historyList.scrollTop = historyList.scrollHeight;
+        }
+
 
         /**
          * Renders a single counter component for a given sheet size.
@@ -127,14 +377,20 @@
          */
         function renderCounter(size, count) {
             const container = document.getElementById('sheetrock-counters');
-            const safeSizeId = size.replace(/[^a-zA-Z0-9]/g, '_').replace(/"/g, 'in').replace('/', 'slash'); // Sanitized ID
+            const safeSizeId = sanitizeKey(size); // Use sanitized key for element ID
             let counterElement = document.getElementById(`counter-${safeSizeId}`);
+            // Sq. Ft. is not displayed on the compact card, but used to determine color
+            // const sqFt = appData.dimensions[size] || 0; 
 
-            // Determine specific color for Moisture/Stretch for visual distinction
+            // Determine specific color for visual distinction of the Plus button
             let plusClass = 'bg-green-500 hover:bg-green-600 text-white';
-            if (size === 'Moisture') {
+            if (size.toLowerCase().includes('moisture')) {
                  plusClass = 'bg-blue-500 hover:bg-blue-600 text-white';
-            } else if (size === 'Stretch') {
+            } else if (size.toLowerCase().includes('fire')) {
+                 plusClass = 'bg-red-500 hover:bg-red-600 text-white';
+            } else if (size.toLowerCase().includes('regular')) {
+                 plusClass = 'bg-gray-700 hover:bg-gray-800 text-white';
+            } else if (size.toLowerCase().includes('stretch')) {
                  plusClass = 'bg-yellow-500 hover:bg-yellow-600 text-gray-900';
             }
             
@@ -142,75 +398,200 @@
             if (!counterElement) {
                 counterElement = document.createElement('div');
                 counterElement.id = `counter-${safeSizeId}`;
-                counterElement.className = 'flex items-center justify-between bg-white p-4 rounded-xl shadow-lg';
+                // Compacted structure for grid item
+                counterElement.className = 'flex flex-col bg-white p-3 rounded-xl shadow-lg border border-gray-100';
                 counterElement.innerHTML = `
-                    <div class="flex flex-col">
-                        <span class="text-lg font-bold text-gray-700">${size}</span>
-                        <span class="text-xs text-gray-400">${SHEETROCK_DIMENSIONS[size] || 0} sq. ft.</span>
-                    </div>
-                    <div class="flex items-center space-x-2">
+                    <!-- Sheet Type Name -->
+                    <span class="text-base font-bold text-gray-700 truncate mb-2">${size}</span>
+
+                    <div class="flex items-center justify-between space-x-2">
                         <!-- Minus Button -->
                         <button id="minus-${safeSizeId}" data-size="${size}" data-action="decrement"
-                            class="control-btn bg-red-100 hover:bg-red-200 text-red-600 w-12 h-12 text-2xl font-bold rounded-full transition-colors active:scale-95 disabled:opacity-30" disabled>
+                            class="control-btn bg-red-100 hover:bg-red-200 text-red-600 w-8 h-8 text-xl font-bold rounded-md transition-colors active:scale-95 disabled:opacity-30 flex items-center justify-center p-0">
                             &minus;
                         </button>
 
                         <!-- Count Display -->
-                        <span id="count-${safeSizeId}" class="text-4xl font-extrabold text-gray-900 w-16 text-center">${count}</span>
+                        <span id="count-${safeSizeId}" class="text-2xl font-extrabold text-gray-900 w-10 text-center leading-none">${count}</span>
 
                         <!-- Plus Button -->
                         <button id="plus-${safeSizeId}" data-size="${size}" data-action="increment"
-                            class="control-btn ${plusClass} w-12 h-12 text-2xl font-bold rounded-full transition-colors active:scale-95 disabled:opacity-50" disabled>
+                            class="control-btn ${plusClass} w-8 h-8 text-xl font-bold rounded-md transition-colors active:scale-95 flex items-center justify-center p-0">
                             &plus;
                         </button>
                     </div>
                 `;
                 container.appendChild(counterElement);
-
+                
                 // Add event listeners once
                 counterElement.querySelectorAll('.control-btn').forEach(button => {
-                    button.addEventListener('click', handleCounterClick);
+                    button.addEventListener('click', handleCounterClick); 
                 });
             } else {
                 // If element exists, just update the count display
                 document.getElementById(`count-${safeSizeId}`).textContent = count;
             }
+
+            // Always update the disabled state of the minus button
+            const minusBtn = document.getElementById(`minus-${safeSizeId}`);
+            if (minusBtn) {
+                // Only allow decrement if the count is > 0 based on the recalculated state
+                minusBtn.disabled = count <= 0;
+            }
         }
-
+        
         /**
-         * Updates the UI buttons and project inputs' disabled state based on auth status.
-         * @param {boolean} ready - True if auth is complete and inputs/buttons should be enabled.
+         * Updates all dynamic parts of the UI based on the current appData state.
          */
-        function updateUIStates(ready) {
-            document.querySelectorAll('.control-btn').forEach(btn => btn.disabled = !ready);
-            document.getElementById('reset-button').disabled = !ready;
-            document.querySelectorAll('.project-input').forEach(input => input.disabled = !ready);
-        }
+        function updateUI() {
+            recalculateCounts(); 
+            
+            let totalSheets = 0;
+            let totalSqFt = 0;
+            const currentDimensionKeys = Object.keys(appData.dimensions);
+            const counterContainer = document.getElementById('sheetrock-counters');
 
-        // --- Firestore Interaction Handlers ---
+            // 1. Update Project Details
+            document.getElementById('customer-name').value = appData.customerName || '';
+            document.getElementById('site-address').value = appData.siteAddress || '';
 
-        /**
-         * Initializes the Sheetrock counter document with default values if it doesn't exist.
-         */
-        async function initializeCounterDocument() {
-            const docRef = getDocumentRef();
-            if (!docRef) return;
-
-            // Create an object with all counts initialized to 0 and project details empty
-            const initialData = {
-                customerName: '',
-                siteAddress: '',
-                userId: userId
-            };
-            SHEETROCK_SIZES.forEach(size => {
-                initialData[size] = 0;
+            // 2. Clean up and Render Counters
+            const activeCounterKeys = currentDimensionKeys.map(sanitizeKey);
+            Array.from(counterContainer.children).forEach(child => {
+                const childKey = child.id.replace('counter-', '');
+                if (!activeCounterKeys.includes(childKey)) {
+                    child.remove();
+                }
             });
 
-            try {
-                // Use setDoc with { merge: true } to create if it doesn't exist, or merge if it does.
-                await setDoc(docRef, initialData, { merge: true });
-            } catch (error) {
-                console.error("Error initializing document:", error);
+            // Update Counters and Calculate Totals for existing types
+            currentDimensionKeys.forEach(size => {
+                const count = appData.counts[size] || 0;
+                const sqFtPerSheet = appData.dimensions[size] || 0;
+
+                renderCounter(size, count);
+                totalSheets += count;
+                totalSqFt += count * sqFtPerSheet;
+            });
+
+            // 3. Update Totals Display
+            document.getElementById('grand-total').textContent = totalSheets;
+            document.getElementById('total-sqft').textContent = totalSqFt.toLocaleString() + ' Sq. Ft.';
+            
+            // 4. Update Config and Log panels
+            renderConfigPanel();
+            renderLogPanel(); 
+        }
+
+        // --- Interaction Handlers ---
+        
+        /**
+         * Handles changes in the configuration panel (name or sqft).
+         */
+        function handleConfigChange(event) {
+            const input = event.currentTarget;
+            const parentDiv = input.closest('.flex');
+            const nameInput = parentDiv.querySelector('input[data-field="name"]');
+            const sqftInput = parentDiv.querySelector('input[data-field="sqft"]');
+            
+            const newName = nameInput.value.trim();
+            const originalKey = nameInput.dataset.originalKey; 
+            
+            const sqftValue = sqftInput.value.trim();
+            const newSqFt = sqftValue ? parseInt(sqftValue) : NaN;
+
+
+            // Check for invalid input
+            if (!newName || isNaN(newSqFt) || newSqFt < 1) {
+                console.error("Invalid configuration data. Name must be non-empty and Sq. Ft. must be a positive number.");
+                
+                if (!newName) nameInput.value = originalKey;
+                if (isNaN(newSqFt) || newSqFt < 1) sqftInput.value = appData.dimensions[originalKey];
+                
+                console.error("Configuration update failed: Name must be non-empty and Sq. Ft. must be a positive number.");
+                
+                return;
+            }
+            
+            const isNameChanged = originalKey !== newName;
+            
+            if (isNameChanged) {
+                if (appData.dimensions[newName]) {
+                     console.error(`Configuration update failed: Type name "${newName}" already exists. Please choose a unique name.`);
+                     nameInput.value = originalKey; // Revert the name field
+                     return;
+                }
+                
+                // **RENAME LOGIC**: Transfer dimensions and update the action log
+                const newDimensions = {};
+                
+                Object.keys(appData.dimensions).forEach(key => {
+                    if (key === originalKey) {
+                        newDimensions[newName] = newSqFt; // Use new name and new sqft
+                    } else {
+                        newDimensions[key] = appData.dimensions[key];
+                    }
+                });
+                
+                // Update the action log to reflect the new type name
+                appData.actionLog.forEach(entry => {
+                    if (entry.type === originalKey) {
+                        entry.type = newName;
+                    }
+                });
+
+                appData.dimensions = newDimensions;
+                
+                // Re-render the entire configuration panel 
+                renderConfigPanel(); 
+
+            } else {
+                // Only SQFT changed (or no change at all)
+                appData.dimensions[originalKey] = newSqFt;
+            }
+            
+            saveToLocalStorage();
+        }
+        
+        /**
+         * Handles adding a new dimension type.
+         */
+        function handleAddDimension() {
+            const nameInput = document.getElementById('new-type-name');
+            const sqftInput = document.getElementById('new-type-sqft');
+            
+            const newName = nameInput.value.trim();
+            const newSqFt = parseInt(sqftInput.value);
+
+            if (!newName || isNaN(newSqFt) || newSqFt < 1) {
+                console.error("Add New Type failed: Please enter a valid Name and a positive value for Sq. Ft.");
+                return;
+            }
+            
+            if (appData.dimensions[newName]) {
+                console.error(`Add New Type failed: The type "${newName}" already exists. Please choose a unique name.`);
+                return;
+            }
+
+            appData.dimensions[newName] = newSqFt;
+
+            // Clear inputs and save
+            nameInput.value = '';
+            sqftInput.value = '';
+            saveToLocalStorage();
+        }
+        
+        /**
+         * Handles removing a dimension type.
+         */
+        function handleRemoveDimension(event) {
+            const keyToRemove = event.currentTarget.dataset.key;
+            
+            if (appData.dimensions[keyToRemove]) {
+                // Remove the dimension
+                delete appData.dimensions[keyToRemove];
+                
+                saveToLocalStorage();
             }
         }
 
@@ -218,195 +599,78 @@
          * Handles saving changes from the project input fields (Customer Name, Address).
          * @param {Event} event - The input change event.
          */
-        async function handleInputChange(event) {
-            if (!isAuthReady) return;
-
+        function handleInputChange(event) {
             const input = event.currentTarget;
             const field = input.dataset.field;
             const value = input.value.trim();
-            const docRef = getDocumentRef();
-            if (!docRef) return;
-
-            try {
-                const update = {};
-                update[field] = value;
-                await updateDoc(docRef, update);
-            } catch (error) {
-                console.error(`Error updating ${field}:`, error);
-            }
+            
+            appData[field] = value;
+            saveToLocalStorage();
         }
 
         /**
-         * Handles the click on the plus/minus buttons.
+         * Handles the click on the plus/minus buttons, logging the action internally.
          * @param {Event} event - The click event.
          */
-        async function handleCounterClick(event) {
-            if (!isAuthReady) return;
-
+        function handleCounterClick(event) {
             const button = event.currentTarget;
-            const size = button.dataset.size;
+            const size = button.dataset.size; // Sheetrock type name 
             const action = button.dataset.action;
-            const docRef = getDocumentRef();
-            if (!docRef) return;
-
-            try {
-                // Temporarily disable the button to prevent rapid-fire clicks
-                button.disabled = true;
-
-                // Get current count from the UI (which is updated by onSnapshot)
-                const safeSizeId = size.replace(/[^a-zA-Z0-9]/g, '_').replace(/"/g, 'in').replace('/', 'slash');
-                const currentCountElement = document.getElementById(`count-${safeSizeId}`);
-                let currentCount = parseInt(currentCountElement.textContent) || 0;
-                let newCount = currentCount;
-
-
-                if (action === 'increment') {
-                    newCount++;
-                } else if (action === 'decrement' && currentCount > 0) {
-                    newCount--;
-                } else if (action === 'decrement' && currentCount === 0) {
-                    // Prevent writing a negative number to the database
-                    button.disabled = false;
-                    return;
-                }
-
-                const update = {};
-                update[size] = newCount;
-                await updateDoc(docRef, update);
-                button.disabled = false; // Re-enable on success
-
-            } catch (error) {
-                console.error("Error updating counter:", error);
-                button.disabled = false;
+            
+            // Recalculate counts to get the accurate current count for the decrement constraint check
+            recalculateCounts(); 
+            const currentCount = appData.counts[size] || 0;
+            
+            if (action === 'decrement' && currentCount <= 0) {
+                console.warn(`Cannot decrement ${size}: count is already zero.`);
+                return; // Prevent negative counts
             }
+            
+            // 1. Add new action to the log (This is necessary for persistence)
+            const newEntry = {
+                id: crypto.randomUUID(),
+                type: size,
+                action: action, // 'increment' or 'decrement'
+                timestamp: Date.now()
+            };
+            appData.actionLog.push(newEntry);
+            
+            // 2. Save (which triggers the full UI update/recalculation and the log panel)
+            saveToLocalStorage(); 
         }
 
         /**
          * Resets all counts and project details to zero/empty.
          */
         async function resetAllCounts() {
-            if (!isAuthReady || !confirm('Are you sure you want to reset ALL sheetrock counts and project details to zero?')) return;
+            const confirmed = await customConfirm('Are you sure you want to reset ALL sheetrock counts, the action history, and project details to zero? This action cannot be undone and only affects this browser.');
 
-            const docRef = getDocumentRef();
-            if (!docRef) return;
-
-            try {
-                const resetData = { customerName: '', siteAddress: '' };
-                SHEETROCK_SIZES.forEach(size => {
-                    resetData[size] = 0;
-                });
-                await updateDoc(docRef, resetData);
-                console.log("All counts and project data reset successfully.");
-            } catch (error) {
-                console.error("Error resetting counts:", error);
+            if (confirmed) {
+                // Clear the source of truth (the log)
+                appData.actionLog = [];
+                // Clear project details
+                appData.customerName = '';
+                appData.siteAddress = '';
+                
+                saveToLocalStorage();
             }
         }
 
-        // --- Real-time Listener and Calculation ---
-
-        /**
-         * Sets up the real-time listener for the sheetrock counts.
-         */
-        function startRealtimeListener() {
-            const docRef = getDocumentRef();
-            if (!docRef) return;
-
-            onSnapshot(docRef, (docSnap) => {
-                if (docSnap.exists()) {
-                    const data = docSnap.data();
-                    let totalSheets = 0;
-                    let totalSqFt = 0;
-
-                    // 1. Update Project Details
-                    document.getElementById('customer-name').value = data.customerName || '';
-                    document.getElementById('site-address').value = data.siteAddress || '';
-
-
-                    // 2. Update Counters and Calculate Totals
-                    SHEETROCK_SIZES.forEach(size => {
-                        // Use 0 if the key is missing or undefined
-                        const count = data[size] !== undefined ? data[size] : 0;
-                        const sqFtPerSheet = SHEETROCK_DIMENSIONS[size] || 0;
-
-                        renderCounter(size, count);
-                        totalSheets += count;
-                        totalSqFt += count * sqFtPerSheet;
-
-                        // Also update the disabled state of the minus button if count is 0
-                        const safeSizeId = size.replace(/[^a-zA-Z0-9]/g, '_').replace(/"/g, 'in').replace('/', 'slash');
-                        const minusBtn = document.getElementById(`minus-${safeSizeId}`);
-                        if (minusBtn) {
-                            minusBtn.disabled = count <= 0 || !isAuthReady;
-                        }
-                    });
-
-                    // 3. Update Totals Display
-                    document.getElementById('grand-total').textContent = totalSheets;
-                    document.getElementById('total-sqft').textContent = totalSqFt.toLocaleString() + ' Sq. Ft.';
-
-                } else {
-                    // Document doesn't exist, initialize it
-                    initializeCounterDocument();
-                }
-            }, (error) => {
-                console.error("Firestore onSnapshot error:", error);
-            });
-        }
-
-        // --- Initialization and Auth ---
+        // --- Initialization ---
 
         window.onload = function () {
-            // 1. Initialize Firebase
-            try {
-                app = initializeApp(firebaseConfig);
-                db = getFirestore(app);
-                auth = getAuth(app);
-                setLogLevel('debug'); // For visibility into Firestore activity
-            } catch (e) {
-                console.error("Firebase initialization failed:", e);
-                document.getElementById('auth-status').innerHTML = '<p class="text-red-600">Firebase Init Error. Check console.</p>';
-                return;
-            }
+            // 1. Load data or initialize new state
+            loadFromLocalStorage();
 
-            // 2. Attach Listeners
+            // 2. Render the initial state of the UI and config panel
+            updateUI();
+            
+            // 3. Attach Listeners for the main elements
             document.getElementById('reset-button').addEventListener('click', resetAllCounts);
             document.querySelectorAll('.project-input').forEach(input => {
-                // Use 'change' event to save on blur/enter (standard form behavior)
                 input.addEventListener('change', handleInputChange);
             });
-
-            // 3. Set up Auth Listener
-            onAuthStateChanged(auth, async (user) => {
-                if (user) {
-                    userId = user.uid;
-                    isAuthReady = true;
-
-                    document.getElementById('user-id').textContent = userId;
-                    document.getElementById('auth-status').classList.remove('bg-indigo-50');
-                    document.getElementById('auth-status').classList.add('bg-green-50');
-                    document.getElementById('auth-status').querySelector('p').textContent = 'Authenticated User ID:';
-
-                    // 4. Render initial static elements and enable UI
-                    SHEETROCK_SIZES.forEach(size => renderCounter(size, 0));
-                    updateUIStates(true);
-
-                    // 5. Start listening for data
-                    startRealtimeListener();
-
-                } else {
-                    // Attempt to sign in if no user is found
-                    if (initialAuthToken) {
-                        try {
-                            await signInWithCustomToken(auth, initialAuthToken);
-                        } catch (error) {
-                            console.error("Custom Token Sign In failed, falling back:", error);
-                            await signInAnonymously(auth);
-                        }
-                    } else {
-                        await signInAnonymously(auth);
-                    }
-                }
-            });
+            document.getElementById('add-type-button').addEventListener('click', handleAddDimension);
         };
     </script>
 </body>
